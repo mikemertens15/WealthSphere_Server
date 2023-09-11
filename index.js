@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrpyt = require("bcrpytjs");
+const bcrpyt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user_model");
 const {
@@ -110,4 +110,57 @@ app.post("/api/exchange_public_token", async (req, res) => {
   const exchangeResponse = await plaidClient.itemPublicTokenExchange({
     public_token: req.body.public_token,
   });
+
+  access_token = exchangeResponse.data.access_token;
+  res.json(true);
+
+  /* save item to a specific user - needs work 
+  const itemId = exchangeResponse.data.item_id;
+  try {
+    const user = await User.findOne({
+      email: req.body.userEmail,
+    });
+
+    const account {
+      item_id: itemId,
+      access_token: accessToken,
+    };
+    user.accounts.push(account);
+    await user.save();
+
+    res.json(true);
+  } catch(err) {
+    console.log(err);
+    res.status(500).json({status: "Error", error: err});
+  }
+  */
+});
+
+/* End Link */
+
+// Retrieve balances for an item
+// Has basic functionality, needs to be updated to find a specific item from a user
+app.get("/api/balance", async (req, res) => {
+  const balanceResponse = await plaidClient.accountsBalanceGet({
+    access_token: access_token,
+  });
+
+  res.json({
+    Balance: balanceResponse.data,
+  });
+});
+
+// Retrieve Transactions for an Item
+app.get("/api/transactions", async (req, res) => {
+  const response = await plaidClient.transactionsGet({
+    access_token: access_token,
+    start_date: req.body.start_date,
+    end_date: req.body.end_date,
+  });
+});
+
+/* End Plaid API */
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
 });
