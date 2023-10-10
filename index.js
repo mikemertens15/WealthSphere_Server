@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrpyt = require("bcrpytjs");
+const bcrpyt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user_model");
 const {
@@ -110,4 +110,8 @@ app.post("/api/exchange_public_token", async (req, res) => {
   const exchangeResponse = await plaidClient.itemPublicTokenExchange({
     public_token: req.body.public_token,
   });
+});
+
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
 });
