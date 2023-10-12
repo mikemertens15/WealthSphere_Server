@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const bcrpyt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user_model");
 const {
@@ -33,11 +33,17 @@ app.use(cors());
 app.use(express.json());
 
 mongoose.connect(process.env.DB_CONNECTION);
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error: "));
+db.once("open", () => {
+  console.log("Connected to MongoDB");
+});
 
 /* Begin Authentication */
 app.post("/api/register", async (req, res) => {
+  // TODO: Check if user exists b4 making new user, respond with error if does
   try {
-    const hashedPassword = await bcrpyt.hash(req.body.password, 10);
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const user = await User.create({
       name: req.body.name,
       email: req.body.email,
@@ -50,12 +56,17 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-app.post("api/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
+  console.log(req.body);
   const user = await User.findOne({
     email: req.body.email,
   });
 
-  const isPasswordValid = await bcrpyt.compare(
+  if (!user) {
+    return res.status(400).json({ status: "error", error: "User not found" });
+  }
+
+  const isPasswordValid = await bcrypt.compare(
     req.body.password,
     user.password
   );
