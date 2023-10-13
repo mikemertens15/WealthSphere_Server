@@ -72,9 +72,12 @@ app.post("/api/login", async (req, res) => {
 
   if (isPasswordValid) {
     console.log(user);
-    return res.json({ status: "ok", user: user });
+    return res.json({ status: "success", user: user });
   } else {
-    return res.json({ status: "ok", user: false });
+    return res.json({
+      status: "error",
+      error: "Password Incorrect, Please try again.",
+    });
   }
 });
 
