@@ -41,15 +41,20 @@ db.once("open", () => {
 
 /* Begin Authentication */
 app.post("/api/register", async (req, res) => {
-  // TODO: Check if user exists b4 making new user, respond with error if does
   try {
+    const existingUser = await User.findOne({ email: req.body.email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ status: "error", error: "Email already in use" });
+    }
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const user = await User.create({
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword,
     });
-    res.json({ status: "ok", user: user });
+    res.json({ status: "success", user: user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error", error: error });
