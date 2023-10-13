@@ -57,7 +57,6 @@ app.post("/api/register", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-  console.log(req.body);
   const user = await User.findOne({
     email: req.body.email,
   });
@@ -72,14 +71,8 @@ app.post("/api/login", async (req, res) => {
   );
 
   if (isPasswordValid) {
-    const token = jwt.sign(
-      {
-        name: user.name,
-        email: user.email,
-      },
-      process.env.JWT_SECRET
-    );
-    return res.json({ status: "ok", user: token });
+    console.log(user);
+    return res.json({ status: "ok", user: user });
   } else {
     return res.json({ status: "ok", user: false });
   }
