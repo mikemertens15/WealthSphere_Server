@@ -49,7 +49,7 @@ app.post("/api/register", async (req, res) => {
       email: req.body.email,
       password: hashedPassword,
     });
-    res.json({ status: "ok" });
+    res.json({ status: "ok", user: user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error", error: error });
