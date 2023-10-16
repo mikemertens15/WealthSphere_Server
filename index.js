@@ -17,7 +17,6 @@ const {
 const PORT = process.env.PORT || 3001;
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_SECRET = process.env.PLAID_SECRET_SAND;
-const PLAID_PUBLIC_KEY = process.env.PLAID_PUBLIC_KEY;
 const PLAID_ENV = "sandbox";
 const PLAID_PRODUCTS = (process.env.PLAID_PRODUCTS || "transactions").split(
   ","
@@ -52,8 +51,15 @@ app.post("/api/register", async (req, res) => {
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword,
+      items: [],
+      accounts: {},
     });
-    res.json({ status: "success", user: user });
+    res.json({
+      status: "success",
+      name: user.name,
+      email: user.email,
+      items: user.items,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "error", error: error });
@@ -75,8 +81,12 @@ app.post("/api/login", async (req, res) => {
   );
 
   if (isPasswordValid) {
-    console.log(user);
-    return res.json({ status: "success", user: user });
+    return res.json({
+      status: "success",
+      name: user.name,
+      email: user.email,
+      items: user.items,
+    });
   } else {
     return res.json({
       status: "error",
@@ -122,29 +132,27 @@ app.post("/api/exchange_public_token", async (req, res) => {
     public_token: req.body.public_token,
   });
 
-  access_token = exchangeResponse.data.access_token;
-  res.json(true);
-
-  /* save item to a specific user - needs work 
+  // save item to a specific user
   const itemId = exchangeResponse.data.item_id;
+  const access_token = exchangeResponse.data.access_token;
+
   try {
     const user = await User.findOne({
       email: req.body.userEmail,
     });
 
-    const account {
-      item_id: itemId,
-      access_token: accessToken,
-    };
-    user.accounts.push(account);
+    user.items.push(itemId);
+    user.accounts.set(itemId, access_token);
     await user.save();
 
-    res.json(true);
-  } catch(err) {
+    res.json({
+      status: "Success",
+      itemId: itemId,
+    });
+  } catch (err) {
     console.log(err);
-    res.status(500).json({status: "Error", error: err});
+    res.status(500).json({ status: "Error", error: err });
   }
-  */
 });
 
 /* End Link */
@@ -163,11 +171,30 @@ app.get("/api/balance", async (req, res) => {
 
 // Retrieve Transactions for an Item
 app.get("/api/transactions", async (req, res) => {
-  const response = await plaidClient.transactionsGet({
-    access_token: access_token,
-    start_date: req.body.start_date,
-    end_date: req.body.end_date,
-  });
+  // find user in database and get access token from itemId
+  const email = req.query.email;
+  const itemId = req.query.itemId;
+
+  try {
+    const user = await User.findOne({
+      email: email,
+    });
+
+    if (user.accounts.get(itemId)) {
+      const response = await plaidClient.transactionsGet({
+        access_token: user.accounts.get(itemId),
+        start_date: "2018-01-01",
+        end_date: "2018-02-01",
+      });
+      res.json({
+        transactions: response.data,
+      });
+    } else {
+      console.log("access token undefined");
+    }
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 /* End Plaid API */
