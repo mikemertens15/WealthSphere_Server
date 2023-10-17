@@ -116,12 +116,12 @@ const plaidClient = new PlaidApi(config);
 // Create a link token
 app.get("/api/create_link_token", async (req, res) => {
   const tokenResponse = await plaidClient.linkTokenCreate({
-    user: { client_user_id: "user-id" },
+    user: { client_user_id: "user-id" }, // should make this the ID of the mongodb object eventually (user._id.toString())
     client_name: "WealthSphere",
     language: "en",
     products: PLAID_PRODUCTS,
     country_codes: PLAID_COUNTRY_CODES,
-    redirect_uri: "http://localhost:3000/api",
+    redirect_uri: "http://localhost:3001/api",
   });
   res.json(tokenResponse.data);
 });
@@ -160,6 +160,9 @@ app.post("/api/exchange_public_token", async (req, res) => {
 // Retrieve balances for an item
 // Has basic functionality, needs to be updated to find a specific item from a user
 app.get("/api/balance", async (req, res) => {
+  const email = req.query.email;
+  const itemId = req.query.itemId;
+
   const balanceResponse = await plaidClient.accountsBalanceGet({
     access_token: access_token,
   });
