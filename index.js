@@ -184,10 +184,9 @@ app.get("/api/transactions", async (req, res) => {
     });
 
     if (user.accounts.get(itemId)) {
-      const response = await plaidClient.transactionsGet({
+      const response = await plaidClient.transactionsSync({
         access_token: user.accounts.get(itemId),
-        start_date: "2018-01-01",
-        end_date: "2018-02-01",
+        count: 1,
       });
       res.json({
         transactions: response.data,
