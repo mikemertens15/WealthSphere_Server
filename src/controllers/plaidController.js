@@ -55,13 +55,25 @@ exports.getBalance = async (req, res) => {
   const email = req.query.email;
   const itemId = req.query.itemId;
 
-  const balanceResponse = await plaidClient.accountsBalanceGet({
-    access_token: access_token,
-  });
+  try {
+    const user = await User.findOne({
+      email: email,
+    });
 
-  res.json({
-    Balance: balanceResponse.data,
-  });
+    if (user.accounts.get(itemId)) {
+      const balanceResponse = await plaidClient.accountsBalanceGet({
+        access_token: user.accounts.get(itemId),
+      });
+      const accounts = balanceResponse.data.accounts;
+      res.json({
+        Balance: accounts,
+      });
+    } else {
+      console.log("access token undefined");
+    }
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 exports.getTransactions = async (req, res) => {

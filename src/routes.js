@@ -15,7 +15,7 @@ router.post("/api/login", login);
 // Plaid Routes
 router.get("/api/create_link_token", createLinkToken);
 router.post("/api/exchange_public_token", exchangePublicToken);
-router.get("api/balance", getBalance);
+router.get("/api/balance", getBalance);
 router.get("/api/transactions", getTransactions);
 
 module.exports = router;
