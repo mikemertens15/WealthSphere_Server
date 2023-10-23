@@ -64,9 +64,9 @@ exports.getBalance = async (req, res) => {
       const balanceResponse = await plaidClient.accountsBalanceGet({
         access_token: user.accounts.get(itemId),
       });
-      const accounts = balanceResponse.data.accounts;
+      const account = balanceResponse.data.accounts[0];
       res.json({
-        Balance: accounts,
+        account: account,
       });
     } else {
       console.log("access token undefined");
