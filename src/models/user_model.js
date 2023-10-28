@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
       type: Map,
       of: String,
     },
+    financeStats: {},
   },
   { collection: "user-data" }
 );
