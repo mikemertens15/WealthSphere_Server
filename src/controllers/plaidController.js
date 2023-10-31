@@ -2,6 +2,7 @@ const plaidClient = require("../services/plaidClient");
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const User = require("../models/user_model");
+const PlaidItem = require("../models/plaid_item_model");
 const bodyParser = require("body-parser");
 
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
@@ -24,21 +25,34 @@ exports.createLinkToken = async (req, res) => {
 };
 
 exports.exchangePublicToken = async (req, res) => {
-  const exchangeResponse = await plaidClient.itemPublicTokenExchange({
-    public_token: req.body.public_token,
-  });
-
-  // save item to a specific user
-  const itemId = exchangeResponse.data.item_id;
-  const access_token = exchangeResponse.data.access_token;
-
   try {
+    const exchangeResponse = await plaidClient.itemPublicTokenExchange({
+      public_token: req.body.public_token,
+    });
+
+    // save item to a specific user
+    const itemId = exchangeResponse.data.item_id;
+    const accessToken = exchangeResponse.data.access_token;
+
     const user = await User.findOne({
       email: req.body.userEmail,
     });
+    if (!user) {
+      return res.status(404).json({ status: "error", error: "User not found" });
+    }
 
-    user.items.push(itemId);
-    user.accounts.set(itemId, access_token);
+    // Create new PlaidItem
+    const plaidItem = new PlaidItem({
+      itemId: itemId,
+      accessToken: accessToken,
+      user: user._id,
+    });
+    await plaidItem.save();
+
+    // TODO: Grab balances with getBalance and make an account object. Add that to plaidItem b4 saving
+
+    user.plaidItems.push(plaidItem._id);
+
     await user.save();
 
     res.json({

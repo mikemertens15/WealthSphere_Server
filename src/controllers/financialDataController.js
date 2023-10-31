@@ -6,12 +6,15 @@
 // Bills get recurring transactions and display them separately, and can be manually entered as well
 // User created Goals and their progress towards them
 
+// When an account (item) gets linked, update stats
+
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
 };
 
 exports.netWorth = async (req, res) => {
   // return a $ figure to front-end, maybe with detailed breakdown of accounts?
+  // for item in user -> figure out if asset or debt, get a grand total and return
 };
 
 exports.updateTransactions = async (req, res) => {

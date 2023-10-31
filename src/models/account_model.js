@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-const User = require("./user_model");
 
-const AccountSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User" },
+const AccountSchema = new mongoose.Schema({
+  accountId: { type: String, required: true },
+  balances: {
+    available: Number,
+    current: Number,
+  },
+  plaidItem: { type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
-module.exports = mongoose.model("AccountScheme", AccountSchema);
+const model = mongoose.model("Account", AccountSchema);
+module.exports = model;

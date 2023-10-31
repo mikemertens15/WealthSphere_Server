@@ -15,14 +15,11 @@ exports.register = async (req, res) => {
       name: req.body.name,
       email: req.body.email,
       password: hashedPassword,
-      items: [],
-      accounts: {},
     });
     res.json({
       status: "success",
       name: user.name,
       email: user.email,
-      items: user.items,
     });
   } catch (error) {
     console.log(error);
