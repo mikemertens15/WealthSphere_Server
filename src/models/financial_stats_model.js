@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 const financialStatsSchema = new mongoose.Schema({
   netWorth: Number,
   transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
+  budget: {
+    income: Number,
+    totalSpent: Number,
+  },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 

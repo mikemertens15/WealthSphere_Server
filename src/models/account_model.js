@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const AccountSchema = new mongoose.Schema({
   accountId: { type: String, required: true },
+  accountType: String,
   balances: {
     available: Number,
     current: Number,
