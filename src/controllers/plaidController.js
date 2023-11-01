@@ -3,6 +3,7 @@ const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
+const Account = require("../models/account_model");
 const bodyParser = require("body-parser");
 
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
@@ -49,17 +50,41 @@ exports.exchangePublicToken = async (req, res) => {
     });
     await plaidItem.save();
 
-    // TODO: Grab balances with getBalance and make an account object. Add that to plaidItem b4 saving
-    // 1. call balance/get, get an array of accounts in response
-    // 2. for each account in the provided array, pull the account id, account type, and balances and set a new Account() object and save it
-    // 3. push new accounts into accounts array of plaidItem we just made
-    // 4. Save plaidItem
+    let totalBalanceToAdd = 0;
 
+    const balanceResponse = await plaidClient.accountsBalanceGet({
+      access_token: accessToken,
+    });
+
+    for (const account of balanceResponse.data.accounts) {
+      const newAccount = new Account({
+        accountId: account.account_id,
+        accountType: account.subtype,
+        balances: {
+          available: account.balances.available,
+          current: account.balances.current,
+        },
+        plaidItem: plaidItem._id,
+        user: user._id,
+      });
+      await newAccount.save();
+      plaidItem.accounts.push(newAccount._id);
+
+      if (account.type === "depository" || account.type === "investment") {
+        totalBalanceToAdd += account.balances.current;
+      } else if (account.type === "credit" || account.type === "loan") {
+        totalBalanceToAdd -= account.balances.current;
+      }
+    }
+
+    await plaidItem.save();
     user.plaidItems.push(plaidItem._id);
 
     // TODO: Adjust financial stats of user with newly linked item
     // 1. when going through the forEach loop, keep track of the balance, and what kind of account it is
-    // 2. using that variable, after accounts have been saved, add the balance to the networth financialStat
+    // 2. using that variable, after accounts have been saved, add the balance to the net worth financialStat
+
+    user.financialStats.netWorth += totalBalanceToAdd;
 
     await user.save();
 

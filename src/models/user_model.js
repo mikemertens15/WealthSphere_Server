@@ -7,8 +7,7 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     plaidItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" }],
     financialStats: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "FinancialStats",
+      netWorth: Number,
     },
   },
   { collection: "user-data" }
