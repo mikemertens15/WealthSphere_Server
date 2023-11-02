@@ -8,7 +8,6 @@ const AccountSchema = new mongoose.Schema({
     available: Number,
     current: Number,
   },
-  transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
   plaidItem: { type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });

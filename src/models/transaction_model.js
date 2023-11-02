@@ -2,10 +2,11 @@ const mongoose = require("mongoose");
 
 const TransactionSchema = new mongoose.Schema({
   amount: Number,
+  account: String,
   category: String,
   date: Date,
   merchant_name: String,
-  account: { type: mongoose.Schema.Types.ObjectId, ref: "Account" },
+  plaidItem: { type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" },
 });
 
 const model = mongoose.model("Transaction", TransactionSchema);

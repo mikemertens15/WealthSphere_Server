@@ -4,6 +4,7 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
 const Account = require("../models/account_model");
+const Transaction = require("../models/transaction_model");
 const bodyParser = require("body-parser");
 
 const PLAID_COUNTRY_CODES = (process.env.PLAID_COUNTRY_CODES || "US").split(
@@ -77,6 +78,41 @@ exports.exchangePublicToken = async (req, res) => {
       }
     }
 
+    // Transactions
+
+    let cursor = null;
+    let added = [];
+    let hasMore = true;
+
+    while (hasMore) {
+      const syncResponse = await plaidClient.transactionsSync({
+        access_token: accessToken,
+        cursor: cursor,
+      });
+      const data = syncResponse.data;
+      added = added.concat(data.added);
+
+      hasMore = data.has_more;
+      cursor = data.next_cursor;
+    }
+
+    console.log(added);
+    for (const addedTrans of added) {
+      const newTrans = new Transaction({
+        amount: addedTrans.amount,
+        account: addedTrans.account_id,
+        category: addedTrans.personal_finance_category.primary,
+        date: addedTrans.date,
+        merchant_name: addedTrans.merchant_name,
+        plaidItem: plaidItem._id,
+      });
+      console.log(`Saving transaction: ${newTrans}`);
+      await newTrans.save();
+      plaidItem.transactions.push(newTrans._id);
+    }
+
+    plaidItem.transactionCursor = cursor;
+
     await plaidItem.save();
     user.plaidItems.push(plaidItem._id);
 
@@ -91,55 +127,5 @@ exports.exchangePublicToken = async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ status: "Error", error: err });
-  }
-};
-
-exports.getBalance = async (req, res) => {
-  const email = req.query.email;
-  const itemId = req.query.itemId;
-
-  try {
-    const user = await User.findOne({
-      email: email,
-    });
-
-    if (user.accounts.get(itemId)) {
-      const balanceResponse = await plaidClient.accountsBalanceGet({
-        access_token: user.accounts.get(itemId),
-      });
-      const account = balanceResponse.data.accounts[0];
-      res.json({
-        account: account,
-      });
-    } else {
-      console.log("access token undefined");
-    }
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-exports.getTransactions = async (req, res) => {
-  const email = req.query.email;
-  const itemId = req.query.itemId;
-
-  try {
-    const user = await User.findOne({
-      email: email,
-    });
-
-    if (user.accounts.get(itemId)) {
-      const response = await plaidClient.transactionsSync({
-        access_token: user.accounts.get(itemId),
-        count: 1,
-      });
-      res.json({
-        transactions: response.data,
-      });
-    } else {
-      console.log("access token undefined");
-    }
-  } catch (err) {
-    console.log(err);
   }
 };
