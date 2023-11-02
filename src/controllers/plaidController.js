@@ -52,11 +52,11 @@ exports.exchangePublicToken = async (req, res) => {
 
     let totalBalanceToAdd = 0;
 
-    const balanceResponse = await plaidClient.accountsBalanceGet({
+    const accountGetResponse = await plaidClient.accountsGet({
       access_token: accessToken,
     });
 
-    for (const account of balanceResponse.data.accounts) {
+    for (const account of accountGetResponse.data.accounts) {
       const newAccount = new Account({
         accountId: account.account_id,
         accountType: account.subtype,
@@ -79,10 +79,6 @@ exports.exchangePublicToken = async (req, res) => {
 
     await plaidItem.save();
     user.plaidItems.push(plaidItem._id);
-
-    // TODO: Adjust financial stats of user with newly linked item
-    // 1. when going through the forEach loop, keep track of the balance, and what kind of account it is
-    // 2. using that variable, after accounts have been saved, add the balance to the net worth financialStat
 
     user.financialStats.netWorth += totalBalanceToAdd;
 

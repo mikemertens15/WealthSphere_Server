@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 
 const TransactionSchema = new mongoose.Schema({
-  total: Number,
+  amount: Number,
+  category: String,
+  date: Date,
+  merchant_name: String,
   account: { type: mongoose.Schema.Types.ObjectId, ref: "Account" },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
 const model = mongoose.model("Transaction", TransactionSchema);

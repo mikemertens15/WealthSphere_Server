@@ -12,6 +12,7 @@ const User = require("../models/user_model");
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
   // TODO: test multiple accounts with net worth b4 moving to transactions
+  // TODO: if no budget, direct user to budget page to create one
   const email = req.query.email;
   try {
     const user = await User.findOne({
