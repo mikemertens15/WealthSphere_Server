@@ -79,6 +79,7 @@ exports.exchangePublicToken = async (req, res) => {
     }
 
     // Transactions
+    // TODO: catch if the sync call gets the sync mutation error and correct
 
     let cursor = null;
     let added = [];
@@ -96,7 +97,6 @@ exports.exchangePublicToken = async (req, res) => {
       cursor = data.next_cursor;
     }
 
-    console.log(added);
     for (const addedTrans of added) {
       const newTrans = new Transaction({
         amount: addedTrans.amount,
@@ -104,9 +104,9 @@ exports.exchangePublicToken = async (req, res) => {
         category: addedTrans.personal_finance_category.primary,
         date: addedTrans.date,
         merchant_name: addedTrans.merchant_name,
+        name: addedTrans.name,
         plaidItem: plaidItem._id,
       });
-      console.log(`Saving transaction: ${newTrans}`);
       await newTrans.save();
       plaidItem.transactions.push(newTrans._id);
     }

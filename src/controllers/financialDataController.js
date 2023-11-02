@@ -8,6 +8,8 @@
 
 // When an account (item) gets linked, update stats
 const User = require("../models/user_model");
+const PlaidItem = require("../models/plaid_item_model");
+const { default: mongoose } = require("mongoose");
 
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
@@ -24,7 +26,42 @@ exports.dashboardData = async (req, res) => {
     }
 
     const netWorth = user.financialStats.netWorth;
-    res.json({ netWorth: netWorth });
+
+    const recentTransactions = await PlaidItem.aggregate([
+      {
+        $match: { user: user._id },
+      },
+      {
+        $lookup: {
+          from: "transactions",
+          localField: "transactions",
+          foreignField: "_id",
+          as: "transactions",
+        },
+      },
+      { $unwind: "$transactions" },
+      {
+        $sort: { "transactions.date": -1 },
+      },
+      {
+        $limit: 10,
+      },
+      {
+        $group: {
+          _id: "$_id",
+          transactions: { $push: "$transactions" },
+        },
+      },
+    ]);
+
+    const formattedRecentTransactions = recentTransactions
+      .map((item) => item.transactions)
+      .flat();
+
+    res.json({
+      netWorth: netWorth,
+      recentTransactions: formattedRecentTransactions,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({ status: "Error", error: err });
