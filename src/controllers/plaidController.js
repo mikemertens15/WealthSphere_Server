@@ -61,6 +61,7 @@ exports.exchangePublicToken = async (req, res) => {
       const newAccount = new Account({
         accountId: account.account_id,
         accountType: account.subtype,
+        accountName: account.name,
         balances: {
           available: account.balances.available,
           current: account.balances.current,

@@ -9,7 +9,6 @@
 // When an account (item) gets linked, update stats
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
-const { default: mongoose } = require("mongoose");
 
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
@@ -27,6 +26,7 @@ exports.dashboardData = async (req, res) => {
 
     const netWorth = user.financialStats.netWorth;
 
+    // TODO: If merchant name is null, pass in some default value
     const recentTransactions = await PlaidItem.aggregate([
       {
         $match: { user: user._id },
@@ -41,26 +41,49 @@ exports.dashboardData = async (req, res) => {
       },
       { $unwind: "$transactions" },
       {
-        $sort: { "transactions.date": -1 },
+        $lookup: {
+          from: "accounts",
+          localField: "transactions.account",
+          foreignField: "accountId",
+          as: "account",
+        },
+      },
+      { $unwind: "$account" },
+      {
+        $project: {
+          _id: "$transactions._id",
+          amount: {
+            $cond: {
+              if: { $lt: ["$transactions.amount", 0] },
+              then: { $multiply: ["$transactions.amount", -1] },
+              else: "$transactions.amount",
+            },
+          },
+          description: {
+            $cond: {
+              if: { $lt: ["$transactions.amount", 0] },
+              then: "Refund",
+              else: "Payment",
+            },
+          },
+          accountName: "$account.accountName",
+          category: "$transactions.category",
+          date: "$transactions.date",
+          merchant_name: "$transactions.merchant_name",
+        },
+      },
+      {
+        $sort: { date: -1 },
       },
       {
         $limit: 10,
       },
-      {
-        $group: {
-          _id: "$_id",
-          transactions: { $push: "$transactions" },
-        },
-      },
     ]);
 
-    const formattedRecentTransactions = recentTransactions
-      .map((item) => item.transactions)
-      .flat();
-
     res.json({
+      budget: false,
       netWorth: netWorth,
-      recentTransactions: formattedRecentTransactions,
+      recentTransactions: recentTransactions,
     });
   } catch (err) {
     console.log(err);
