@@ -17,6 +17,11 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       financialStats: {
         netWorth: 0,
+        budget: {
+          hasBudget: false,
+          income: 0,
+          expenses: {},
+        },
       },
     });
     res.json({
@@ -49,7 +54,6 @@ exports.login = async (req, res) => {
       status: "success",
       name: user.name,
       email: user.email,
-      items: user.items,
     });
   } else {
     return res.json({

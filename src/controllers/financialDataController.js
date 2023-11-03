@@ -103,7 +103,24 @@ exports.updateTransactions = async (req, res) => {
 exports.createBudget = async (req, res) => {
   // Create a budget from a user's income and known expenses, will need a lot of data from user (rent, food, debts, etc)
   // This data will be used to create the dashboard chart
+  const user = await User.findOne({ email: req.body.email });
+
+  const income = req.body.income;
+  const expenses = req.body.expenses; // expect a map from front-end
+
+  user.budget.income = income;
+  user.budget.expenses = expenses;
+  user.save();
+
+  res.json({ status: "Success" });
 };
+
+exports.getBudget = async (req, res) => {
+  // Should return the basic planned income and expenses, but also process transactions in a way that shows where you are at in the particular budget month
+  // Will only work for the current month initially; will need to keep track of every month to implement further
+};
+
+exports.updateBudget = async (req, res) => {};
 
 exports.investmentsOverview = async (req, res) => {
   // Return an overall view of investment balances, without going into detail on positions

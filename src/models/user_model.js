@@ -8,6 +8,11 @@ const UserSchema = new mongoose.Schema(
     plaidItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" }],
     financialStats: {
       netWorth: Number,
+      budget: {
+        hasBudget: Boolean,
+        income: Number,
+        expenses: { type: Map, of: Number },
+      },
     },
   },
   { collection: "user-data" }
