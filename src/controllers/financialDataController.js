@@ -12,8 +12,7 @@ const PlaidItem = require("../models/plaid_item_model");
 
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
-  // TODO: test multiple accounts with net worth b4 moving to transactions
-  // TODO: if no budget, direct user to budget page to create one
+  // TODO: test multiple accounts
   const email = req.query.email;
   try {
     const user = await User.findOne({
@@ -81,7 +80,11 @@ exports.dashboardData = async (req, res) => {
     ]);
 
     res.json({
-      budget: false,
+      budget: {
+        hasBudget: user.financialStats.budget.hasBudget,
+        income: user.financialStats.budget.income,
+        // spentSoFar: user.something.spentSoFarThisMonth need to figure this out
+      },
       netWorth: netWorth,
       recentTransactions: recentTransactions,
     });
@@ -108,8 +111,13 @@ exports.createBudget = async (req, res) => {
   const income = req.body.income;
   const expenses = req.body.expenses; // expect a map from front-end
 
-  user.budget.income = income;
-  user.budget.expenses = expenses;
+  console.log(
+    `Received income: ${income} and expenses: ${expenses} from frontend`
+  );
+
+  user.financialStats.budget.income = income;
+  user.financialStats.budget.expenses = expenses;
+  user.financialStats.budget.hasBudget = true;
   user.save();
 
   res.json({ status: "Success" });
