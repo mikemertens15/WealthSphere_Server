@@ -1,4 +1,4 @@
-const { register } = require("../controllers/authController");
+const { register, login } = require("../controllers/authController");
 const User = require("../models/user_model");
 const bcrypt = require("bcryptjs");
 const httpMocks = require("node-mocks-http");
@@ -6,60 +6,145 @@ const httpMocks = require("node-mocks-http");
 jest.mock("../models/user_model");
 jest.mock("bcryptjs");
 
-describe("Register Function", () => {
-  beforeEach(() => {
-    // Clear all instances and calls to constructor and all methods:
-    User.findOne.mockClear();
-    User.create.mockClear();
-    bcrypt.hash.mockClear();
-  });
-
-  test("registers a new user successfully", async () => {
-    // Setup
-    User.findOne.mockResolvedValue(null);
-    bcrypt.hash.mockResolvedValue("hashedPassword");
-    User.create.mockResolvedValue({
-      name: "Mike",
-      email: "mike@example.com",
-    });
-
-    const mockReq = {
+describe("register", () => {
+  it("should register a new user successfully", async () => {
+    const req = httpMocks.createRequest({
       body: {
-        name: "Mike",
-        email: "mike@example.com",
+        name: "Test User",
+        email: "test@example.com",
         password: "password123",
       },
-    };
-    const mockRes = {
-      json: jest.fn(),
-      status: jest.fn().mockReturnThis(),
-    };
-
-    // Execute
-    await register(mockReq, mockRes);
-
-    // Assert
-    expect(User.findOne).toHaveBeenCalledWith({ email: "mike@example.com" });
-    expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
-    expect(User.create).toHaveBeenCalledWith({
-      name: "Mike",
-      email: "mike@example.com",
-      password: "hashedPassword",
-      financialStats: {
-        netWorth: 0,
-        budget: {
-          hasBudget: false,
-          income: 0,
-          expenses: {},
-        },
-      },
     });
-    expect(mockRes.json).toHaveBeenCalledWith({
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue(null);
+    bcrypt.hash.mockResolvedValue("hashedpassword123");
+    User.create.mockResolvedValue({
+      name: "Test User",
+      email: "test@example.com",
+    });
+
+    await register(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
       status: "success",
-      name: "Mike",
-      email: "mike@example.com",
+      name: "Test User",
+      email: "test@example.com",
     });
   });
 
-  // Add more tests here for other scenarios like email already in use, error handling, etc.
+  it("should return an error if the email is already in use", async () => {
+    const req = httpMocks.createRequest({
+      body: {
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue({
+      name: "Test User",
+      email: "test@example.com",
+    });
+
+    await register(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
+      status: "error",
+      error: "Email already in use",
+    });
+  });
+
+  it("should return an error if an error occurs during user creation", async () => {
+    const req = httpMocks.createRequest({
+      body: {
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue(null);
+    bcrypt.hash.mockResolvedValue("hashedpassword123");
+    User.create.mockRejectedValue(new Error("Test error"));
+
+    await register(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
+      status: "error",
+      error: "Test error",
+    });
+  });
+});
+
+describe("login", () => {
+  it("should log in a user successfully", async () => {
+    const req = httpMocks.createRequest({
+      body: {
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue({
+      name: "Test User",
+      email: "test@example.com",
+      password: "hashedpassword123",
+    });
+    bcrypt.compare.mockResolvedValue(true);
+
+    await login(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
+      status: "success",
+      name: "Test User",
+      email: "test@example.com",
+    });
+  });
+
+  it("should return an error if the user is not found", async () => {
+    const req = httpMocks.createRequest({
+      body: {
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue(null);
+
+    await login(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
+      status: "error",
+      error: "User not found",
+    });
+  });
+
+  it("should return an error if the password is incorrect", async () => {
+    const req = httpMocks.createRequest({
+      body: {
+        email: "test@example.com",
+        password: "password123",
+      },
+    });
+    const res = httpMocks.createResponse();
+
+    User.findOne.mockResolvedValue({
+      name: "Test User",
+      email: "test@example.com",
+      password: "hashedpassword123",
+    });
+    bcrypt.compare.mockResolvedValue(false);
+
+    await login(req, res);
+
+    expect(JSON.parse(res._getData())).toEqual({
+      status: "error",
+      error: "Password Incorrect, Please try again.",
+    });
+  });
 });
