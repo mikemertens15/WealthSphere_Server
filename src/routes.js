@@ -3,8 +3,6 @@ const router = express.Router();
 const {
   createLinkToken,
   exchangePublicToken,
-  getBalance,
-  getTransactions,
 } = require("./controllers/plaidController");
 const { register, login } = require("./controllers/authController");
 const {

@@ -111,10 +111,6 @@ exports.createBudget = async (req, res) => {
   const income = req.body.income;
   const expenses = req.body.expenses; // expect a map from front-end
 
-  console.log(
-    `Received income: ${income} and expenses: ${expenses} from frontend`
-  );
-
   user.financialStats.budget.income = income;
   user.financialStats.budget.expenses = expenses;
   user.financialStats.budget.hasBudget = true;
