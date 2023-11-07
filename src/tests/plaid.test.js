@@ -1,17 +1,6 @@
-const {
-  createLinkToken,
-  exchangePublicToken,
-  exchangeTokenAndRetrieveUser,
-  createPlaidItem,
-  processAccounts,
-  processTransactions,
-} = require("../controllers/plaidController");
+const { createLinkToken } = require("../controllers/plaidController");
 const plaidClient = require("../services/plaidClient");
 const httpMocks = require("node-mocks-http");
-const User = require("../models/user_model");
-const PlaidItem = require("../models/plaid_item_model");
-const Account = require("../models/account_model");
-const Transaction = require("../models/transaction_model");
 
 jest.mock("../services/plaidClient", () => ({
   linkTokenCreate: jest.fn(),
