@@ -14,7 +14,7 @@ const PLAID_LANGUAGE = process.env.PLAID_LANGUAGE;
 const PLAID_COUNTRY_CODES = process.env.PLAID_COUNTRY_CODES.split(",");
 const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(",");
 
-exports.exchangeTokenAndRetrieveUser = async (publicToken, userEmail) => {
+const exchangeTokenAndRetrieveUser = async (publicToken, userEmail) => {
   const exchangeResponse = await plaidClient.itemPublicTokenExchange({
     public_token: publicToken,
   });
@@ -23,7 +23,7 @@ exports.exchangeTokenAndRetrieveUser = async (publicToken, userEmail) => {
   return { user, ...exchangeResponse.data };
 };
 
-exports.createPlaidItem = async (user, itemId, accessToken) => {
+const createPlaidItem = async (user, itemId, accessToken) => {
   const plaidItem = new PlaidItem({ itemId, accessToken, user: user._id });
   await plaidItem.save();
   await user.plaidItems.push(plaidItem._id);
@@ -31,7 +31,7 @@ exports.createPlaidItem = async (user, itemId, accessToken) => {
   return plaidItem;
 };
 
-exports.processAccounts = async (accounts, plaidItem, user) => {
+const processAccounts = async (accounts, plaidItem, user) => {
   let totalBalanceToAdd = 0;
   for (const account of accounts) {
     const newAccount = new Account({
@@ -56,7 +56,7 @@ exports.processAccounts = async (accounts, plaidItem, user) => {
   return totalBalanceToAdd;
 };
 
-exports.processTransactions = async (accessToken, plaidItem) => {
+const processTransactions = async (accessToken, plaidItem) => {
   let cursor = null;
   let transactions = [];
   let hasMore = true;
@@ -71,7 +71,6 @@ exports.processTransactions = async (accessToken, plaidItem) => {
     cursor = syncResponse.data.next_cursor;
   }
 
-  const transactionIds = [];
   for (const addedTrans of transactions) {
     const newTrans = new Transaction({
       amount: addedTrans.amount,
