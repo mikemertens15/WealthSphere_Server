@@ -5,11 +5,6 @@ const httpMocks = require("node-mocks-http");
 jest.mock("../services/plaidClient", () => ({
   linkTokenCreate: jest.fn(),
 }));
-jest.mock("../services/plaidClient");
-jest.mock("../models/user_model");
-jest.mock("../models/plaid_item_model");
-jest.mock("../models/account_model");
-jest.mock("../models/transaction_model");
 
 describe("createLinkToken", () => {
   afterEach(() => {
