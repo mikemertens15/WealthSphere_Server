@@ -1,11 +1,12 @@
-const plaidClient = require("../services/plaidClient");
-const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+const path = require("path");
+const bodyParser = require("body-parser");
+const plaidClient = require("../services/plaidClient");
+
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
 const Account = require("../models/account_model");
 const Transaction = require("../models/transaction_model");
-const bodyParser = require("body-parser");
 
 const PLAID_CLIENT_ID = process.env.PLAID_CLIENT_ID;
 const PLAID_CLIENT_NAME = process.env.PLAID_CLIENT_NAME;
@@ -14,6 +15,7 @@ const PLAID_LANGUAGE = process.env.PLAID_LANGUAGE;
 const PLAID_COUNTRY_CODES = process.env.PLAID_COUNTRY_CODES.split(",");
 const PLAID_PRODUCTS = process.env.PLAID_PRODUCTS.split(",");
 
+// exchange the public token for an access token and item ID, and return the user
 const exchangeTokenAndRetrieveUser = async (publicToken, userEmail) => {
   const exchangeResponse = await plaidClient.itemPublicTokenExchange({
     public_token: publicToken,
@@ -23,6 +25,7 @@ const exchangeTokenAndRetrieveUser = async (publicToken, userEmail) => {
   return { user, ...exchangeResponse.data };
 };
 
+// create a new plaid item and add it to the user's plaid items
 const createPlaidItem = async (user, itemId, accessToken) => {
   const plaidItem = new PlaidItem({ itemId, accessToken, user: user._id });
   await plaidItem.save();
@@ -31,6 +34,7 @@ const createPlaidItem = async (user, itemId, accessToken) => {
   return plaidItem;
 };
 
+// create a new account for each account in the plaid item, and add it to the plaid item and user
 const processAccounts = async (accounts, plaidItem, user) => {
   let totalBalanceToAdd = 0;
   for (const account of accounts) {
@@ -56,6 +60,7 @@ const processAccounts = async (accounts, plaidItem, user) => {
   return totalBalanceToAdd;
 };
 
+// process all transactions in the plaid item and add them to the plaid item and user
 const processTransactions = async (accessToken, plaidItem) => {
   let cursor = null;
   let transactions = [];
@@ -85,10 +90,12 @@ const processTransactions = async (accessToken, plaidItem) => {
     plaidItem.transactions.push(newTrans._id);
   }
 
+  // Cursor will let plaid know where to start next time
   plaidItem.transactionCursor = cursor;
   await plaidItem.save();
 };
 
+// create a temporary link token for the user and send it back to the client
 exports.createLinkToken = async (req, res) => {
   try {
     const tokenResponse = await plaidClient.linkTokenCreate({
@@ -106,6 +113,8 @@ exports.createLinkToken = async (req, res) => {
   }
 };
 
+// exchange public token for access token, and store it with the user and do initial plaid item processing
+// TODO: encrypt the access token before storing it in the database
 exports.exchangePublicToken = async (req, res) => {
   try {
     const { user, item_id, access_token } = await exchangeTokenAndRetrieveUser(

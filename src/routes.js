@@ -24,6 +24,7 @@ router.get("/api/get_dashboard_data", dashboardData);
 router.post("/api/create_budget", createBudget);
 
 // God Mode
+// Delete all plaid items for a user, used for testing and cleanup
 router.delete("/api/delete_plaid_items", deleteUserPlaidItems);
 
 module.exports = router;
