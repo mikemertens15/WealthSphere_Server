@@ -9,7 +9,7 @@ const {
   dashboardData,
   createBudget,
 } = require("./controllers/financialDataController");
-const { deleteUserPlaidItems } = require("./god/deleteUserPlaidItems");
+const { deleteUserPlaidItems } = require("./controllers/deleteUserPlaidItems");
 
 // Auth Routes
 router.post("/api/register", register);
