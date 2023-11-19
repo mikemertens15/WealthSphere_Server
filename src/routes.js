@@ -8,6 +8,7 @@ const { register, login } = require("./controllers/authController");
 const {
   dashboardData,
   createBudget,
+  addManualTransaction,
 } = require("./controllers/financialDataController");
 const { deleteUserPlaidItems } = require("./controllers/deleteUserPlaidItems");
 
@@ -22,6 +23,7 @@ router.post("/api/exchange_public_token", exchangePublicToken);
 // Finance Data routes
 router.get("/api/get_dashboard_data", dashboardData);
 router.post("/api/create_budget", createBudget);
+router.post("/api/add_manual_transaction", addManualTransaction);
 
 // God Mode
 // Delete all plaid items for a user, used for testing and cleanup

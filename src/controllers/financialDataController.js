@@ -9,6 +9,7 @@
 // When an account (item) gets linked, update stats
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
+const Transaction = require("../models/transaction_model");
 
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
@@ -97,6 +98,22 @@ exports.dashboardData = async (req, res) => {
 exports.netWorth = async (req, res) => {
   // return a $ figure to front-end, maybe with detailed breakdown of accounts?
   // for item in user -> figure out if asset or debt, get a grand total and return
+};
+
+exports.addManualTransaction = async (req, res) => {
+  // Route for a user to manually add a transaction with no plaid interface
+  const newTrans = new Transaction({
+    amount: req.body.amount,
+    account: req.body.account,
+    category: req.body.category,
+    date: req.body.date,
+    merchant_name: req.body.merchant_name,
+    name: req.body.name,
+    plaidItem: undefined,
+  });
+
+  await newTrans.save();
+  res.json({ status: "Success" });
 };
 
 exports.updateTransactions = async (req, res) => {
