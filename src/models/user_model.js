@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema(
     plaidItems: [{ type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" }],
     financialStats: {
       netWorth: Number,
+      transactions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Transaction" }],
       budget: {
         hasBudget: Boolean,
         income: Number,

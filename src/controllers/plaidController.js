@@ -61,7 +61,7 @@ const processAccounts = async (accounts, plaidItem, user) => {
 };
 
 // process all transactions in the plaid item and add them to the plaid item and user
-const processTransactions = async (accessToken, plaidItem) => {
+const processTransactions = async (accessToken, plaidItem, user) => {
   let cursor = null;
   let transactions = [];
   let hasMore = true;
@@ -84,11 +84,13 @@ const processTransactions = async (accessToken, plaidItem) => {
       date: addedTrans.date,
       merchant_name: addedTrans.merchant_name,
       name: addedTrans.name,
-      plaidItem: plaidItem._id,
+      user: user._id,
     });
     await newTrans.save();
-    plaidItem.transactions.push(newTrans._id);
+    user.financialStats.transactions.push(newTrans._id);
   }
+
+  await user.save();
 
   // Cursor will let plaid know where to start next time
   plaidItem.transactionCursor = cursor;
@@ -132,7 +134,7 @@ exports.exchangePublicToken = async (req, res) => {
       user
     );
 
-    await processTransactions(access_token, plaidItem);
+    await processTransactions(access_token, plaidItem, user);
     user.financialStats.netWorth += totalBalanceToAdd;
     await user.save();
 

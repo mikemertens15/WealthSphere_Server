@@ -6,7 +6,6 @@ const TransactionSchema = new mongoose.Schema({
   category: String,
   date: Date,
   merchant_name: String,
-  plaidItem: { type: mongoose.Schema.Types.ObjectId, ref: "PlaidItem" },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 

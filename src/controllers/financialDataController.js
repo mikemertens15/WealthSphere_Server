@@ -10,6 +10,7 @@
 const User = require("../models/user_model");
 const PlaidItem = require("../models/plaid_item_model");
 const Transaction = require("../models/transaction_model");
+const mongoose = require("mongoose");
 
 exports.dashboardData = async (req, res) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
@@ -27,53 +28,18 @@ exports.dashboardData = async (req, res) => {
     const netWorth = user.financialStats.netWorth;
 
     // TODO: If merchant name is null, pass in some default value
-    const recentTransactions = await PlaidItem.aggregate([
+
+    // Rewrite to account for new schema
+    const recentTransactions = await Transaction.aggregate([
       {
-        $match: { user: user._id },
-      },
-      {
-        $lookup: {
-          from: "transactions",
-          localField: "transactions",
-          foreignField: "_id",
-          as: "transactions",
-        },
-      },
-      { $unwind: "$transactions" },
-      {
-        $lookup: {
-          from: "accounts",
-          localField: "transactions.account",
-          foreignField: "accountId",
-          as: "account",
-        },
-      },
-      { $unwind: "$account" },
-      {
-        $project: {
-          _id: "$transactions._id",
-          amount: {
-            $cond: {
-              if: { $lt: ["$transactions.amount", 0] },
-              then: { $multiply: ["$transactions.amount", -1] },
-              else: "$transactions.amount",
-            },
-          },
-          description: {
-            $cond: {
-              if: { $lt: ["$transactions.amount", 0] },
-              then: "Refund",
-              else: "Payment",
-            },
-          },
-          accountName: "$account.accountName",
-          category: "$transactions.category",
-          date: "$transactions.date",
-          merchant_name: "$transactions.merchant_name",
+        $match: {
+          user: user._id,
         },
       },
       {
-        $sort: { date: -1 },
+        $sort: {
+          date: -1,
+        },
       },
       {
         $limit: 10,
@@ -102,18 +68,29 @@ exports.netWorth = async (req, res) => {
 
 exports.addManualTransaction = async (req, res) => {
   // Route for a user to manually add a transaction with no plaid interface
-  const newTrans = new Transaction({
-    amount: req.body.amount,
-    account: req.body.account,
-    category: req.body.category,
-    date: req.body.date,
-    merchant_name: req.body.merchant_name,
-    name: req.body.name,
-    plaidItem: undefined,
-  });
+  try {
+    // Find user
+    const user = await User.findOne({ email: req.body.email });
 
-  await newTrans.save();
-  res.json({ status: "Success" });
+    const newTrans = new Transaction({
+      amount: req.body.amount,
+      account: req.body.account,
+      category: req.body.category,
+      date: req.body.date,
+      merchant_name: req.body.merchant_name,
+      name: req.body.name,
+      plaidItem: undefined,
+      user: user._id,
+    });
+
+    await newTrans.save();
+    user.financialStats.transactions.push(newTrans._id);
+    await user.save();
+    res.json({ status: "Success" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ status: "Error", error: err });
+  }
 };
 
 exports.updateTransactions = async (req, res) => {
