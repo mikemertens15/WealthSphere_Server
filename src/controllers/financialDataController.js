@@ -47,11 +47,6 @@ exports.dashboardData = async (req, res) => {
     ]);
 
     res.json({
-      budget: {
-        hasBudget: user.financialStats.budget.hasBudget,
-        income: user.financialStats.budget.income,
-        // spentSoFar: user.something.spentSoFarThisMonth need to figure this out
-      },
       netWorth: netWorth,
       recentTransactions: recentTransactions,
     });
