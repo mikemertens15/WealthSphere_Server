@@ -9,6 +9,7 @@ const {
   dashboardData,
   createBudget,
   addManualTransaction,
+  getTransactions,
 } = require("./controllers/financialDataController");
 const { deleteUserPlaidItems } = require("./controllers/deleteUserPlaidItems");
 
@@ -22,6 +23,7 @@ router.post("/api/exchange_public_token", exchangePublicToken);
 
 // Finance Data routes
 router.get("/api/get_dashboard_data", dashboardData);
+router.get("/api/get_transactions", getTransactions);
 router.post("/api/create_budget", createBudget);
 router.post("/api/add_manual_transaction", addManualTransaction);
 

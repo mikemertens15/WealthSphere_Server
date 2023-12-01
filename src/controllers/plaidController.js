@@ -83,6 +83,7 @@ const processTransactions = async (accessToken, plaidItem, user) => {
       category: addedTrans.personal_finance_category.primary,
       date: addedTrans.date,
       merchant_name: addedTrans.merchant_name,
+      transaction_id: addedTrans.transaction_id,
       name: addedTrans.name,
       user: user._id,
     });

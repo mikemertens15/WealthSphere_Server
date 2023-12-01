@@ -74,6 +74,7 @@ exports.addManualTransaction = async (req, res) => {
       date: req.body.date,
       merchant_name: req.body.merchant_name,
       name: req.body.name,
+      transaction_id: Math.random().toString(36).substring(2, 15),
       plaidItem: undefined,
       user: user._id,
     });
@@ -129,4 +130,32 @@ exports.getBills = async (req, res) => {
 
 exports.getDebts = async (req, res) => {
   // Collect all debt that a user has and send to front-end
+};
+
+exports.getTransactions = async (req, res) => {
+  // Return a list of all transactions for a user, with some sort of pagination
+  const email = req.query.email;
+
+  try {
+    const user = await User.findOne({ email: email });
+    const recentTransactions = await Transaction.aggregate([
+      {
+        $match: {
+          user: user._id,
+        },
+      },
+      {
+        $sort: {
+          date: -1,
+        },
+      },
+      {
+        $limit: 100,
+      },
+    ]);
+    res.status(200).json({ transactions: recentTransactions });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ status: "Error", error: err });
+  }
 };

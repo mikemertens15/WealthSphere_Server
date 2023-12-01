@@ -9,22 +9,18 @@ exports.deleteUserPlaidItems = async (req, res) => {
     if (!user) throw new Error("User not found");
 
     for (const plaidItemId of user.plaidItems) {
-      await Transaction.deleteMany({ plaidItem: plaidItemId });
-
       await Account.deleteMany({ plaidItem: plaidItemId });
-
       await PlaidItem.findByIdAndDelete(plaidItemId);
     }
+
+    await Transaction.deleteMany({ user: user._id });
 
     user.plaidItems = [];
 
     user.financialStats = {
       netWorth: 0,
-      budget: {
-        hasBudget: false,
-        income: 0,
-        expenses: {},
-      },
+      transactions: [],
+      monthlyBudget: [],
     };
 
     await user.save();
