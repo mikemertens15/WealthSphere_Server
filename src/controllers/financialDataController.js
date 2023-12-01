@@ -124,6 +124,19 @@ exports.investmentSpecific = async (req, res) => {
   // Provide more specific data on investments (positions, risk, expected return, etc)
 };
 
+exports.getAccounts = async (req, res) => {
+  const email = req.query.email;
+
+  try {
+    const user = await User.findOne({ email: email });
+    const accounts = await Account.find({ user: user._id });
+    res.status(200).json({ accounts: accounts });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ status: "Error", error: err });
+  }
+};
+
 exports.getBills = async (req, res) => {
   // Some sort of system to organize recurring expenses, like rent, utilities, etc
 };
