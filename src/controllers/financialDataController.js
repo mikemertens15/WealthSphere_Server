@@ -147,6 +147,7 @@ exports.getDebts = async (req, res) => {
 
 exports.getTransactions = async (req, res) => {
   // Return a list of all transactions for a user, with some sort of pagination
+  // TODO: adjust aggregation to return amounts with the full cents: 5.4 -> 5.40
   const email = req.query.email;
 
   try {
