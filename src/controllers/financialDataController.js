@@ -96,6 +96,23 @@ exports.getBills = async (req, res) => {
   // Some sort of system to organize recurring expenses, like rent, utilities, etc
 };
 
+exports.addNewBill = async (req, res) => {
+  // Add a new bill to a user's account
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    const newBill = {
+      name: req.body.name,
+      amount: req.body.amount,
+      dueDate: req.body.dueDate,
+    };
+    user.financialStats.bills.push(newBill);
+    await user.save();
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ status: "Error", error: err });
+  }
+};
+
 exports.getDebts = async (req, res) => {
   // Collect all debt that a user has and send to front-end
 };
