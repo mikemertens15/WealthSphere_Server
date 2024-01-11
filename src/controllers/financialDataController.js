@@ -39,10 +39,10 @@ exports.addManualTransaction = async (req, res) => {
     await newTrans.save();
     user.financialStats.transactions.push(newTrans._id);
     await user.save();
-    res.json({ status: "Success" });
+    res.status(200).json({ message: "Success" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ status: "Error", error: err });
+    res.status(500).json({ message: "Error", error: err });
   }
 };
 

@@ -8,9 +8,7 @@ exports.register = async (req, res) => {
     // Check if the email is already in use, and if it is, return an error.
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      return res
-        .status(409)
-        .json({ status: "error", error: "Email already in use" });
+      return res.status(409).json({ error: "Email already in use" });
     }
 
     // Hash the password and create the user.

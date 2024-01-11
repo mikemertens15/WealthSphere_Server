@@ -10,6 +10,6 @@ exports.getAccountsPageData = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ status: "Error", error: err });
+    res.status(500).json({ error: err });
   }
 };
