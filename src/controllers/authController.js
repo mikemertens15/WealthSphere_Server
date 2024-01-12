@@ -3,12 +3,14 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
 
 // Takes in a name, email, and password, and returns a user object if the email is not already in use.
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   try {
     // Check if the email is already in use, and if it is, return an error.
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      return res.status(409).json({ error: "Email already in use" });
+      const error = new Error("Email already in use");
+      error.status = 409;
+      throw error;
     }
 
     // Hash the password and create the user.
@@ -34,38 +36,42 @@ exports.register = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ status: "error", error: error.message });
+    next(error);
   }
 };
 
 // Takes in an email and password, and returns a user object if the email and password are valid.
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   // Check if the user exists, and if not, return an error.
-  const user = await User.findOne({
-    email: req.body.email,
-  });
-
-  if (!user) {
-    return res.status(400).json({ status: "error", error: "User not found" });
-  }
-
-  // Check if the password is valid, if it is, return the user information and success, and if not, return an error.
-  const isPasswordValid = await bcrypt.compare(
-    req.body.password,
-    user.password
-  );
-
-  if (isPasswordValid) {
-    return res.json({
-      status: "success",
-      name: user.name,
-      email: user.email,
+  try {
+    const user = await User.findOne({
+      email: req.body.email,
     });
-  } else {
-    return res.status(401).json({
-      status: "error",
-      error: "Password Incorrect, Please try again.",
-    });
+
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+
+    // Check if the password is valid, if it is, return the user information and success, and if not, return an error.
+    const isPasswordValid = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
+
+    if (isPasswordValid) {
+      return res.json({
+        status: "success",
+        name: user.name,
+        email: user.email,
+      });
+    } else {
+      const error = new Error("Invalid password");
+      error.status = 401;
+      throw error;
+    }
+  } catch (error) {
+    next(error);
   }
 };
