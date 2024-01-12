@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const errorHandler = require("./middleware/errorHandler");
 const routes = require("./routes");
 
 // Environment Variables
@@ -14,6 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(routes);
+app.use(errorHandler);
 
 mongoose.connect(process.env.DB_CONNECTION);
 const db = mongoose.connection;
