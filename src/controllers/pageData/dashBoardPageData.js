@@ -1,7 +1,7 @@
 const User = require("../../models/user_model");
 const Transaction = require("../../models/transaction_model");
 
-exports.getDashboardData = async (req, res) => {
+exports.getDashboardData = async (req, res, next) => {
   // for current dashboard, need net worth, recent transactions (~5-6), data for spending chart
   // TODO: test multiple accounts
   const email = req.query.email;
@@ -11,7 +11,9 @@ exports.getDashboardData = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ status: "error", error: "User not found" });
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
     }
 
     const netWorth = user.financialStats.netWorth;
@@ -40,7 +42,6 @@ exports.getDashboardData = async (req, res) => {
       recentTransactions: recentTransactions,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ status: "Error", error: err });
+    next(err);
   }
 };

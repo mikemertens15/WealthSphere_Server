@@ -13,12 +13,7 @@ const PlaidItem = require("../models/plaid_item_model");
 const Transaction = require("../models/transaction_model");
 const mongoose = require("mongoose");
 
-exports.netWorth = async (req, res) => {
-  // return a $ figure to front-end, maybe with detailed breakdown of accounts?
-  // for item in user -> figure out if asset or debt, get a grand total and return
-};
-
-exports.addManualTransaction = async (req, res) => {
+exports.addManualTransaction = async (req, res, next) => {
   // Route for a user to manually add a transaction with no plaid interface
   try {
     // Find user
@@ -41,8 +36,7 @@ exports.addManualTransaction = async (req, res) => {
     await user.save();
     res.status(200).json({ message: "Success" });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Error", error: err });
+    next(err);
   }
 };
 
