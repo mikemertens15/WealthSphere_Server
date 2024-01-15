@@ -9,10 +9,31 @@
 // When an account (item) gets linked, update stats
 const User = require("../models/user_model");
 const Account = require("../models/account_model");
-const PlaidItem = require("../models/plaid_item_model");
 const Transaction = require("../models/transaction_model");
-const mongoose = require("mongoose");
 
+exports.add_manual_account = async (req, res, next) => {
+  // Create an account for a user manually, without using plaid.
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    const newAccount = new Account({
+      accountId: Math.random().toString(36).substring(2, 15),
+      accountType: req.body.accountType,
+      accountName: req.body.accountName,
+      balances: {
+        available: undefined,
+        current: req.body.accountBalance,
+      },
+      plaidItem: undefined,
+      user: user._id,
+    });
+    await newAccount.save();
+    user.financialStats.netWorth += req.body.accountBalance;
+    await user.save();
+    res.json({ status: "success", message: "Success" });
+  } catch (err) {
+    next(err);
+  }
+};
 exports.addManualTransaction = async (req, res, next) => {
   // Route for a user to manually add a transaction with no plaid interface
   try {
@@ -34,7 +55,7 @@ exports.addManualTransaction = async (req, res, next) => {
     await newTrans.save();
     user.financialStats.transactions.push(newTrans._id);
     await user.save();
-    res.status(200).json({ message: "Success" });
+    res.json({ status: "success", message: "Success" });
   } catch (err) {
     next(err);
   }
@@ -57,7 +78,7 @@ exports.createBudget = async (req, res) => {
   user.financialStats.budget.hasBudget = true;
   user.save();
 
-  res.json({ status: "Success" });
+  res.json({ status: "success", message: "Success" });
 };
 
 exports.getBudget = async (req, res) => {
@@ -90,7 +111,7 @@ exports.getBills = async (req, res) => {
   // Some sort of system to organize recurring expenses, like rent, utilities, etc
 };
 
-exports.addNewBill = async (req, res) => {
+exports.addNewBill = async (req, res, next) => {
   // Add a new bill to a user's account
   try {
     const user = await User.findOne({ email: req.body.email });
@@ -102,8 +123,7 @@ exports.addNewBill = async (req, res) => {
     user.financialStats.bills.push(newBill);
     await user.save();
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ status: "Error", error: err });
+    next(err);
   }
 };
 
@@ -111,7 +131,7 @@ exports.getDebts = async (req, res) => {
   // Collect all debt that a user has and send to front-end
 };
 
-exports.getTransactions = async (req, res) => {
+exports.getTransactions = async (req, res, next) => {
   // Return a list of all transactions for a user, with some sort of pagination
   // TODO: adjust aggregation to return amounts with the full cents: 5.4 -> 5.40
   const email = req.query.email;
@@ -133,9 +153,8 @@ exports.getTransactions = async (req, res) => {
         $limit: 100,
       },
     ]);
-    res.status(200).json({ transactions: recentTransactions });
+    res.json({ status: "success", transactions: recentTransactions });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ status: "Error", error: err });
+    next(err);
   }
 };
