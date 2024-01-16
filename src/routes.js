@@ -15,9 +15,6 @@ const {
   getDashboardData,
 } = require("./controllers/pageData/dashBoardPageData");
 const {
-  getBalancePageData,
-} = require("./controllers/pageData/balancesPageData");
-const {
   getAccountsPageData,
 } = require("./controllers/pageData/accountsPageData");
 const { getBillsPageData } = require("./controllers/pageData/billsPageData");
@@ -39,7 +36,6 @@ router.post("/api/add_new_bill", addNewBill);
 
 // Page Data Routes
 router.get("/api/get_dashboard_data", getDashboardData);
-router.get("/api/get_balance_page_data", getBalancePageData);
 router.get("/api/get_accounts_page_data", getAccountsPageData);
 router.get("/api/get_bills_page_data", getBillsPageData);
 
