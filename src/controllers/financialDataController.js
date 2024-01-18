@@ -11,10 +11,27 @@ const User = require("../models/user_model");
 const Account = require("../models/account_model");
 const Transaction = require("../models/transaction_model");
 
-exports.add_manual_account = async (req, res, next) => {
+exports.addManualAccount = async (req, res, next) => {
   // Create an account for a user manually, without using plaid.
+
   try {
+    if (
+      !req.body.accountType ||
+      !req.body.accountName ||
+      !req.body.accountBalance
+    ) {
+      const error = new Error("Missing required fields");
+      error.status = 400;
+      throw error;
+    }
+
     const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+
     const newAccount = new Account({
       accountId: Math.random().toString(36).substring(2, 15),
       accountType: req.body.accountType,
@@ -29,7 +46,8 @@ exports.add_manual_account = async (req, res, next) => {
     await newAccount.save();
     user.financialStats.netWorth += req.body.accountBalance;
     await user.save();
-    res.json({ status: "success", message: "Success" });
+
+    res.status(200).json({ status: "success", message: "Success" });
   } catch (err) {
     next(err);
   }

@@ -1,7 +1,7 @@
 const errorHandler = (err, req, res, next) => {
   console.log(err.status); // server side logging
 
-  const statusCode = err.status;
+  const statusCode = err.status || 500;
   const message = statusCode == 500 ? "Internal Server Error" : err.message;
 
   res.status(statusCode).json({

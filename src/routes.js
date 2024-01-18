@@ -8,6 +8,7 @@ const { register, login } = require("./controllers/authController");
 const {
   createBudget,
   addManualTransaction,
+  addManualAccount,
   getTransactions,
   addNewBill,
 } = require("./controllers/financialDataController");
@@ -32,6 +33,7 @@ router.post("/api/exchange_public_token", exchangePublicToken);
 router.get("/api/get_transactions", getTransactions);
 router.post("/api/create_budget", createBudget);
 router.post("/api/add_manual_transaction", addManualTransaction);
+router.post("/api/add_manual_account", addManualAccount);
 router.post("/api/add_new_bill", addNewBill);
 
 // Page Data Routes
