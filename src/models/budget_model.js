@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const BudgetSchema = new mongoose.Schema({
-  period: { type: String, required: true },
+  month: { type: String, required: true },
   projectedIncome: Number,
   projectedExpenses: { type: Map, of: Number },
-  actualIncome: Number,
-  actualExpenses: { type: Map, of: Number },
+  currentIncome: Number,
+  currentExpenses: { type: Map, of: Number },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 

@@ -10,6 +10,7 @@
 const User = require("../models/user_model");
 const Account = require("../models/account_model");
 const Transaction = require("../models/transaction_model");
+const Budget = require("../models/budget_model");
 
 exports.addManualAccount = async (req, res, next) => {
   // Create an account for a user manually, without using plaid.
@@ -47,7 +48,9 @@ exports.addManualAccount = async (req, res, next) => {
     user.financialStats.netWorth += req.body.accountBalance;
     await user.save();
 
-    res.status(200).json({ status: "success", message: "Success" });
+    res
+      .status(200)
+      .json({ status: "success", message: "New account added successfully" });
   } catch (err) {
     next(err);
   }
@@ -73,7 +76,9 @@ exports.addManualTransaction = async (req, res, next) => {
     await newTrans.save();
     user.financialStats.transactions.push(newTrans._id);
     await user.save();
-    res.json({ status: "success", message: "Success" });
+    res
+      .status(200)
+      .json({ status: "success", message: "Transaction Successfully added" });
   } catch (err) {
     next(err);
   }
@@ -83,20 +88,41 @@ exports.updateTransactions = async (req, res) => {
   // Keep a transactions collection attached to a user, use this to update it with recent transactions
 };
 
-exports.createBudget = async (req, res) => {
+exports.createBudget = async (req, res, next) => {
   // Create a budget from a user's income and known expenses, will need a lot of data from user (rent, food, debts, etc)
   // This data will be used to create the dashboard chart
-  const user = await User.findOne({ email: req.body.email });
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
 
-  const income = req.body.income;
-  const expenses = req.body.expenses; // expect a map from front-end
+    const expectedIncome = req.body.expectedIncome;
+    const expectedExpenses = req.body.expectedExpenses; // expect a map from front-end
 
-  user.financialStats.budget.income = income;
-  user.financialStats.budget.expenses = expenses;
-  user.financialStats.budget.hasBudget = true;
-  user.save();
+    const newBudget = new Budget({
+      month: new Date().getMonth(),
+      projectedIncome: expectedIncome,
+      projectedExpenses: expectedExpenses,
+      currentIncome: 0,
+      currentExpenses: 0,
+      user: user._id,
+    });
 
-  res.json({ status: "success", message: "Success" });
+    user.financialStats.monthlyBudget.push(newBudget._id);
+    user.save();
+
+    res
+      .status(200)
+      .json({
+        status: "success",
+        message: "Budget Successfully added to user",
+      });
+  } catch (err) {
+    next(err);
+  }
 };
 
 exports.getBudget = async (req, res) => {
@@ -117,10 +143,21 @@ exports.investmentSpecific = async (req, res) => {
 exports.getAccounts = async (email) => {
   try {
     const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+
     const accounts = await Account.find({ user: user._id });
+    if (!accounts) {
+      const error = new Error("Accounts not found");
+      error.status = 404;
+      throw error;
+    }
+
     return accounts;
   } catch (err) {
-    console.log(err);
     return err;
   }
 };
@@ -156,6 +193,12 @@ exports.getTransactions = async (req, res, next) => {
 
   try {
     const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+
     const recentTransactions = await Transaction.aggregate([
       {
         $match: {
