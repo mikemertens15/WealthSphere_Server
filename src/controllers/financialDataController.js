@@ -6,7 +6,8 @@
 // Bills get recurring transactions and display them separately, and can be manually entered as well
 // User created Goals and their progress towards them
 
-// When an account (item) gets linked, update stats
+const moment = require("moment");
+
 const User = require("../models/user_model");
 const Account = require("../models/account_model");
 const Transaction = require("../models/transaction_model");
@@ -61,11 +62,21 @@ exports.addManualTransaction = async (req, res, next) => {
     // Find user
     const user = await User.findOne({ email: req.body.email });
 
+    // Reformat the date to 'YYYY-MM-DD' format
+    const inputDate = moment(req.body.date);
+    let formattedDate;
+
+    if (inputDate.isValid()) {
+      formattedDate = inputDate.format("MM-DD-YYYY");
+    } else {
+      formattedDate = moment().format("MM-DD-YYYY");
+    }
+
     const newTrans = new Transaction({
       amount: req.body.amount,
       account: req.body.account,
       category: req.body.category,
-      date: req.body.date,
+      date: formattedDate,
       merchant_name: req.body.merchant_name,
       name: req.body.name,
       transaction_id: Math.random().toString(36).substring(2, 15),
@@ -80,6 +91,7 @@ exports.addManualTransaction = async (req, res, next) => {
       .status(200)
       .json({ status: "success", message: "Transaction Successfully added" });
   } catch (err) {
+    console.log(err);
     next(err);
   }
 };
@@ -114,12 +126,10 @@ exports.createBudget = async (req, res, next) => {
     user.financialStats.monthlyBudget.push(newBudget._id);
     user.save();
 
-    res
-      .status(200)
-      .json({
-        status: "success",
-        message: "Budget Successfully added to user",
-      });
+    res.status(200).json({
+      status: "success",
+      message: "Budget Successfully added to user",
+    });
   } catch (err) {
     next(err);
   }
